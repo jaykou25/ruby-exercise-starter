@@ -2,9 +2,13 @@ require 'digest'
 require 'taglib'
 require 'csv'
 
+def seconds_to_ms(sec)
+  "%02d:%02d" % [sec / 60 % 60, sec % 60]
+end
+
 namespace :track do
   task upload_tracks: :environment do
-    father_dir = "/home/jaygao/files"
+    father_dir = "/Users/jaygao/Desktop"
     dir = 'level2'
     new_dir = dir + '_new'
     # 新建文件夹
@@ -17,7 +21,7 @@ namespace :track do
       a_index <=> b_index
     end
 
-    f = File.new('/home/jaygao/files/output.json', 'wb') 
+    f = File.new('/Users/jaygao/Desktop/output.json', 'wb') 
     arr = []
 
     # 遍历文件
@@ -32,16 +36,19 @@ namespace :track do
 
       new_file_path = File.join(father_dir, new_dir, file_md5 + file_ext)
       # 复制到新文件夹
-      # FileUtils.cp(file_path, new_file_path)
+      FileUtils.cp(file_path, new_file_path)
 
-      row[:filePath] = File.join('/audios', file_md5 + file_ext)
+      row[:src] = File.join('/audios', file_md5 + file_ext)
       row[:sort] = index + 1
+      row[:epId] = '859059a56174bdb601bf6535144c78d1'
 
       TagLib::FileRef.open(file_path) do |fileref|
         tag = fileref.tag
         row[:title] = tag.title
 
-        row[:length] =  fileref.audio_properties.length_in_seconds
+        seconds = fileref.audio_properties.length_in_seconds
+
+        row[:length] = seconds_to_ms(seconds)
       end
 
       f.write(row.to_json)
